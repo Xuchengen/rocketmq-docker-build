@@ -1,11 +1,10 @@
-from downloader import Downloader
+import archive
 
 
 def main():
-    url = "https://lg.losangeles.vpsdime.com/100MB.test"
-    target_file = "E://"
-    downloader = Downloader(url, target_file)
-    downloader.download()
+    versions = archive.get_version_list()
+    for item in versions:
+        print(item.version + ">" + item.date_time)
 
 
 if __name__ == '__main__':
