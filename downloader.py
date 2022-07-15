@@ -10,14 +10,14 @@ import requests
 class Downloader:
 
     # 构造方法
-    def __init__(self, url, target_file):
+    def __init__(self, url: str, target_file: str):
         self.url = url
         # 下载文件前先请求一下响应头
         self.__header_resp = requests.head(url, allow_redirects=True)
         self.file_name = self.__get_file_name()
         self.file_size = self.__get_file_size()
         self.target_file = target_file + self.file_name if str(target_file).endswith(
-            "/") else target_file + "/" + self.file_name
+            os.sep) else target_file + os.sep + self.file_name
 
     # 获取文件名
     def __get_file_name(self):
