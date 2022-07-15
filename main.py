@@ -2,9 +2,9 @@ import archive
 
 
 def main():
-    versions = archive.get_version_list()
-    for item in versions:
-        print(item.version + ">" + item.date_time)
+    result_list = archive.get_version_list()
+    for e in result_list:
+        print(e.version + "---" + e.datetime)
 
 
 if __name__ == '__main__':

@@ -1,59 +1,37 @@
-from html.parser import HTMLParser
+import re
+import traceback
 
 import requests
-
-
-def get_version_list():
-    url = "https://archive.apache.org/dist/rocketmq/"
-    resp = requests.get(url)
-    parser = __ApacheRocketmqArchiveHTMLParser()
-    parser.feed(resp.text)
-    return parser.result_list
 
 
 class Item:
     def __init__(self):
         self.version = None
-        self.date_time = None
+        self.datetime = None
 
 
-class __ApacheRocketmqArchiveHTMLParser(HTMLParser):
+# 获取版本清单
+def get_version_list() -> list[Item]:
+    try:
+        url = "https://archive.apache.org/dist/rocketmq/"
+        resp = requests.get(url)
+        html = resp.text
 
-    def __init__(self):
-        super().__init__()
-        self.__img_flag = False
-        self.__a_flag = False
-        self.__a_end_flag = False
-        self.result_list = []
+        result = re.findall("<a href=\".*?/\">(\\d+.*?)/</a>\\s+(\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2})", html)
 
-    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
-        if self.__img_flag is False and tag == "img" and ("alt", "[DIR]") in attrs:
-            self.__img_flag = True
+        if len(result) == 0:
+            raise Exception("正则提取失败，提取结果：%s条" % len(result))
 
-        # 判断上一个标签为img且alt为[DIR]并且当前标签为a才有意义
-        if self.__img_flag and tag == "a":
-            self.__a_flag = True
-
-    def handle_data(self, data: str) -> None:
-        # 当前为a标签提取版本号
-        if self.__a_flag:
-            self.__img_flag = False
-            self.__a_flag = False
-
-            if not (len(data) > 0
-                    and (data.find("dashboard") > 0
-                         or data[0:1].isnumeric())):
-                return
-
-            self.__a_end_flag = True
-
+        result_list = []
+        for e in result:
             item = Item()
-            item.version = data.removesuffix("/")
-            self.result_list.append(item)
-            return
+            item.version = e[0]
+            item.datetime = e[1]
+            result_list.append(item)
 
-        # a标签结束提取发布日期
-        if self.__a_end_flag:
-            self.__a_end_flag = False
-            item = self.result_list[-1]
-            item.date_time = data.replace("    -   ", "").strip(" ")
+        return result_list
+
+    except Exception as e:
+        print("错误：解析Apache Rocketmq archive异常！%s" % e)
+        traceback.print_exc()
+        exit()
