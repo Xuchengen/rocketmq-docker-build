@@ -1,7 +1,11 @@
 import sys
 
 
-class _const(object):
+class Const(object):
+    """
+    常量类实现机制
+    """
+
     class ConstError(TypeError):
         pass
 
@@ -16,4 +20,4 @@ class _const(object):
         self.__dict__[name] = value
 
 
-sys.modules[__name__] = _const()
+sys.modules[__name__] = Const()

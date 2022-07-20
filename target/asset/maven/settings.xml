@@ -3,13 +3,12 @@
           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
           xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0 http://maven.apache.org/xsd/settings-1.0.0.xsd">
 
-    <!-- 自己指定本地仓库路径 -->
     <localRepository>{MAVEN_REPO}</localRepository>
 
     <mirrors>
         <mirror>
             <id>aliyun</id>
-            <name>阿里云公共仓库</name>
+            <name>aliyun</name>
             <mirrorOf>*</mirrorOf>
             <url>https://maven.aliyun.com/repository/public</url>
         </mirror>

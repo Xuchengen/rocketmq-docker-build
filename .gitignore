@@ -1,0 +1,11 @@
+!.gitignore
+
+target/build/*
+target/dist/*
+target/make/*
+target/tools/*
+
+!target/build/.gitkeep
+!target/dist/.gitkeep
+!target/make/.gitkeep
+!target/tools/.gitkeep

@@ -1,46 +1,48 @@
-import pathlib
-import zipfile
+import signal
+import sys
 
-import constant
-import downloader
+import archive
+from archive import VersionInfo
+from builder import Builder
+from helper import Helper
+from maven import Maven
 
 
 def main():
-    version = "apache-maven-3.8.6"
-    url = "https://archive.apache.org/dist/maven/maven-3/3.8.6/binaries/apache-maven-3.8.6-bin.zip"
-    download_maven = downloader.Downloader(url, constant.const.DIST_HOME)
-    download_maven.download()
+    if not (Helper.is_os_support_java() and Helper.is_os_support_javac()):
+        Helper.print_error("错误：当前操作系统没有JDK环境，请安装JDK并设置好环境变量！")
+        exit()
 
-    download_maven_file = download_maven.target_file
+    if not Helper.is_os_support_docker():
+        Helper.print_error("错误：当前操作系统没有Docker环境，请安装Docker并RUN起来！")
+        exit()
+    else:
+        if not Helper.is_docker_runing():
+            Helper.print_error("错误：Docker似乎没有RUN起来啊！")
+            exit()
 
-    path = pathlib.Path(constant.const.MAVEN_HOME)
-    if path.exists():
-        path.rmdir()
+    if not Helper.is_os_support_mvn():
+        Helper.print_warn("警告：当前操作系统没有Maven环境，本程序将初始化一个内置Maven环境！")
+        Maven.install()
 
-    zip_file = zipfile.ZipFile(download_maven_file)
+    list_version = archive.Archive(page_size=10).select()
 
-    for f in zip_file.namelist():
-        zip_file.extract(f, path.parent)
-    zip_file.close()
+    Helper.progress("构建", task, list_version)
 
-    # 修改为maven
-    for f in list(path.parent.iterdir()):
-        if f.name == version:
-            f.rename(constant.const.MAVEN_HOME)
 
-    # 设置权限
-    pathlib.Path(constant.const.MAVEN_HOME).chmod(777)
+def task(list_version: list[VersionInfo]):
+    Builder.build_console(list_version[1].version)
+    Builder.build_rocketmq(list_version[0].version)
+    Builder.build_docker(list_version[0].version, list_version[1].version)
 
-    # 模板替换
-    setting_xml_str = pathlib.Path(constant.const.ASSET_MAVEN_SETTING_XML).read_text(encoding="utf8") \
-        .replace(constant.const.ASSET_MAVEN_SETTING_REPO_FLAG, constant.const.MAVEN_REPO)
 
-    # 写到文件
-    pathlib.Path(constant.const.MAVEN_SETTING_XML).write_text(setting_xml_str)
-
-    # 创建目录
-    pathlib.Path(constant.const.MAVEN_REPO).mkdir()
+# 信号处理
+def signal_handler(signum, frame):
+    if signum == signal.SIGINT.value:
+        print("\n感谢您的使用，我们下次再见！")
+        sys.exit(1)
 
 
 if __name__ == '__main__':
+    signal.signal(signal.SIGINT, signal_handler)
     main()
