@@ -2,6 +2,7 @@ import os
 import platform
 import shutil
 import time
+from typing import Any
 
 import alive_progress
 import psutil as psutil
@@ -102,7 +103,7 @@ class Helper(object):
         return Helper.__get_sys_name() == "darwin"
 
     @staticmethod
-    def is_wondows() -> bool:
+    def is_windows() -> bool:
         """
         是windows系统
 
@@ -153,7 +154,7 @@ class Helper(object):
             os.system("clear")
 
     @staticmethod
-    def progress(title: str, fn, /, *args, **kwargs):
+    def progress(title: str, fn, /, *args, **kwargs) -> Any:
         """
         显示进度条
 
@@ -161,14 +162,29 @@ class Helper(object):
         :param fn: 函数
         :param args: 函数的参数
         :param kwargs: 函数的参数
-        :return: None
+        :return: 不确定的返回值类型
         """
         future = Context.executor.submit(fn, *args, **kwargs)
         with alive_progress.alive_bar(title=title, unknown="triangles",
                                       force_tty=True, receipt=False) as bar:
             while True:
                 if future.done():
-                    break
+                    return future.result()
                 else:
                     bar()
                     time.sleep(.1)
+
+    @staticmethod
+    def shell(cmd: str) -> str:
+        """
+        执行shell脚本
+
+        :param cmd: 命令字符串
+        :return: 命令执行后响应的字符串
+        """
+
+        stdout = os.popen(cmd)
+        with stdout as stdout_:
+            result: str = str().join(stdout_.readlines())
+
+        return result

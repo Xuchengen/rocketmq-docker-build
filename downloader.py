@@ -53,7 +53,7 @@ class Downloader(object):
         try:
             return int(self.__header_resp.headers['Content-Length'])
         except Exception as e:
-            Helper.print_error('错误：获取文件大小异常！%s' % e)
+            Helper.print_error('⛔错误：获取文件大小异常！%s' % e)
             traceback.print_exc()
             exit()
 

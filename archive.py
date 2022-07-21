@@ -132,7 +132,7 @@ class Archive(object):
             input_id = (lambda n: int(n) if n.isdigit() else -1)(input_id)
 
             if input_id > len_ or input_id < 1:
-                print("您的输入有误！")
+                Helper.print_warn("您的输入有误！")
                 time.sleep(1)
             else:
                 return list_[input_id - 1]
@@ -162,7 +162,7 @@ class Archive(object):
             input_id = (lambda n: int(n) if n.isdigit() else -1)(input("请输入编号：") or "0")
 
             if input_id > len_ or input_id < 1:
-                print("您的输入有误！")
+                Helper.print_warn("您的输入有误！")
                 time.sleep(1)
             else:
                 return list_[input_id - 1]
@@ -200,7 +200,7 @@ class Archive(object):
             return result_list
 
         except Exception as e:
-            Helper.print_error("错误：解析Apache archive异常！%s" % e)
+            Helper.print_error("⛔错误：解析Apache archive异常！%s" % e)
             traceback.print_exc()
             exit()
 

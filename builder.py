@@ -5,6 +5,7 @@ import zipfile
 
 import downloader
 from constant import const
+from helper import Helper
 
 
 class Builder(object):
@@ -13,7 +14,7 @@ class Builder(object):
     """
 
     @staticmethod
-    def build_console(version: str) -> None:
+    def build_console(version: str) -> list[bool | str]:
         """
         构建Console
 
@@ -21,40 +22,47 @@ class Builder(object):
         :return: None
         """
 
-        path_str = const.BUILD_HOME + os.sep + const.APACHE_ROCKETMQ_CONSOLE_PREFIX + version
+        path_console = pathlib.Path(const.BUILD_HOME).joinpath(const.APACHE_ROCKETMQ_CONSOLE_PREFIX + version)
 
         # 判断版本目录是否存在
-        if os.path.exists(path_str):
+        if path_console.exists():
 
             # 设置权限
-            os.chmod(path_str, 0o777)
+            path_console.chmod(0o777)
 
-            jar_str = path_str + os.sep + "target" + os.sep \
-                      + const.APACHE_ROCKETMQ_CONSOLE_PREFIX + version + ".jar"
+            path_jar = path_console.joinpath("target").joinpath(const.APACHE_ROCKETMQ_CONSOLE_PREFIX + version + ".jar")
 
-            # 判断构件是否存在
-            if not os.path.exists(jar_str):
+            # 判断Jar是否存在
+            if not path_jar.exists():
                 # 编译
-                os.system("mvn package -Dmaven.test.skip=true -file \"%s\"" % (path_str + os.sep + "pom.xml"))
+                # JVM环境变量JAVA_TOOLS_OPTIONS
 
+                cmd = "mvn package -Dfile.encoding=UTF8 -Dmaven.test.skip=true -file \"%s\" 2>&1" \
+                      % (path_console.joinpath("pom.xml"))
+
+                result = Helper.shell(cmd)
+
+                if "BUILD SUCCESS" in result:
+                    return [True, result]
+                else:
+                    return [False, result]
         else:
 
-            package = const.DIST_HOME + os.sep + \
-                      const.APACHE_ROCKETMQ_CONSOLE_PREFIX + \
-                      version + const.APACHE_ROCKETMQ_CONSOLE_SUFFIX
+            path_zip = pathlib.Path(const.DIST_HOME) \
+                .joinpath(const.APACHE_ROCKETMQ_CONSOLE_PREFIX + version + const.APACHE_ROCKETMQ_CONSOLE_SUFFIX)
 
             # 判断源码包是否存在
-            if os.path.exists(package):
+            if path_zip.exists():
 
-                # 解压到目录
-                zip_file = zipfile.ZipFile(package)
+                # 解压
+                zip_file = zipfile.ZipFile(path_zip)
 
                 for f in zip_file.namelist():
                     zip_file.extract(f, const.BUILD_HOME)
                 zip_file.close()
 
                 # 设置权限
-                os.chmod(path_str, 0o777)
+                path_console.chmod(0o777)
 
                 # 构建
                 Builder.build_console(version)
@@ -123,10 +131,11 @@ class Builder(object):
                 Builder.build_rocketmq(version)
 
     @staticmethod
-    def build_docker(rocketmq_version: str, console_version: str) -> None:
+    def build_docker(tag: str, rocketmq_version: str, console_version: str) -> list[bool | str]:
         """
         制作镜像
 
+        :param tag: 标签名称
         :param rocketmq_version: Rocketmq版本号
         :param console_version: Console版本号
         :return: None
@@ -210,5 +219,14 @@ class Builder(object):
         path_make_console_store.replace(path_make_data_console_store)
 
         # 构建
-        os.system('cd %s & docker build --no-cache -t xce/rocketmq:%s --build-arg version=%s .'
-                  % (path_make, rocketmq_version, rocketmq_version))
+        cmd = 'cd %s & docker build --no-cache -t %s --build-arg version=%s . 2>&1' \
+              % (path_make, tag, rocketmq_version)
+
+        result = Helper.shell(cmd)
+
+        inspect_str = Helper.shell("docker inspect %s 2>&1" % tag)
+
+        if "RepoTags" in inspect_str and tag in inspect_str:
+            return [True, result]
+        else:
+            return [False, result]
