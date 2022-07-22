@@ -1,6 +1,7 @@
 import os
 import platform
 import shutil
+import telnetlib
 import time
 from typing import Any
 
@@ -188,3 +189,19 @@ class Helper(object):
             result: str = str().join(stdout_.readlines())
 
         return result
+
+    @staticmethod
+    def check_port(ip: str, port: int, timeout: int) -> bool:
+        """
+        验证主机端口是否开放
+
+        :param ip: IP地址
+        :param port: 端口号
+        :param timeout: 超时（秒）
+        :return: 布尔值
+        """
+        try:
+            telnetlib.Telnet(host=ip, port=port, timeout=timeout)
+            return True
+        except Exception:
+            return False

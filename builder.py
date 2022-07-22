@@ -2,9 +2,11 @@ import os
 import pathlib
 import shutil
 import zipfile
+from concurrent.futures import as_completed
 
 import downloader
 from constant import const
+from context import Context
 from helper import Helper
 
 
@@ -218,15 +220,63 @@ class Builder(object):
         # 把/console/store目录移动到/data/console/store
         path_make_console_store.replace(path_make_data_console_store)
 
-        # 构建
+        # 删除旧的镜像
+        Helper.shell("docker rmi %s 2>&1" % tag)
+
+        # 构建镜像
         cmd = 'cd %s & docker build --no-cache -t %s --build-arg version=%s . 2>&1' \
               % (path_make, tag, rocketmq_version)
 
         result = Helper.shell(cmd)
 
+        # 验证是否构建成功
         inspect_str = Helper.shell("docker inspect %s 2>&1" % tag)
 
         if "RepoTags" in inspect_str and tag in inspect_str:
             return [True, result]
         else:
             return [False, result]
+
+    @staticmethod
+    def check(tag: str, container_name: str):
+        """
+        验证镜像是否正常
+
+        :param tag: 镜像标签
+        :param container_name: 容器名称
+        :return: None
+        """
+
+        Builder.__close_and_remove(container_name)
+
+        # 部署容器
+        deploy_cmd = "docker run -itd --name=%s -p 8080:8080 " \
+                     "-p 9876:9876 -p 10909:10909 -p 10911:10911 -p 10912:10912 %s 2>&1" % (container_name, tag)
+        Helper.shell(deploy_cmd)
+
+        # 验证容器
+        container_str = Helper.shell("docker ps -a --format \"table {{.Names}}\" 2>&1")
+
+        if container_name not in container_str:
+            return [False, "部署验证容器失败"]
+
+        # 检测端口存活
+        ip = "localhost"
+        timeout = 10
+        args = [[ip, 8080, timeout], [ip, 9876, timeout], [ip, 10909, timeout], [ip, 10911, timeout],
+                [ip, 10912, timeout]]
+        list_future = [Context.executor.submit(Helper.check_port, i[0], i[1], i[2]) for i in args]
+
+        for i in as_completed(list_future):
+            if not i.result():
+                return [False, "验证容器端口失败"]
+
+        Builder.__close_and_remove(container_name)
+
+    @staticmethod
+    def __close_and_remove(container_name: str):
+        # 关闭容器
+        Helper.shell("docker kill %s 2>&1" % container_name)
+
+        # 删除容器
+        Helper.shell("docker rm %s 2>&1" % container_name)

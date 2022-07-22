@@ -57,6 +57,12 @@ def task_build(tag: str, list_version: list[VersionInfo]) -> Any:
     if result_docker is not None and not result_docker[0]:
         return result_docker
 
+    result_check = Builder.check(tag, "tmpmq")
+
+    # 把错误往上抛
+    if result_check is not None and not result_check[0]:
+        return result_check
+
 
 def app_env_check() -> None:
     """
