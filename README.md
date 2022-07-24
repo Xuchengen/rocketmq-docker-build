@@ -44,6 +44,8 @@ Apache RocketMQ 是一个具有低延迟、高性能和高可靠性、万亿级�
 ## 快速部署
 本段指示如何快速的部署RocketMQ最新版容器。
 
+[![Try in PWD](https://raw.githubusercontent.com/Xuchengen/static/master/rocketmq/button.png)](http://play-with-docker.com?stack=https://raw.githubusercontent.com/Xuchengen/static/master/rocketmq/stack.yml)
+
 ### 拉取镜像
 ```shell
 docker pull xuchengen/rocketmq:latest
