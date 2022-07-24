@@ -23,22 +23,15 @@ Apache RocketMQ 是一个具有低延迟、高性能和高可靠性、万亿级�
 
 ### 目录结构
 ```text
-├─rocketmq
-│  ├─conf                   # rocketmq配置目录
-│  │  ├─dledger
-│  │  ├─2m-noslave
-│  │  ├─2m-2s-async
-│  │  └─2m-2s-sync
-│  └─store                  # broker持久化目录
-│      ├─commitlog
-│      ├─config
-│      └─consumequeue
-├─console                   # 控制台配置目录
+├─rocketmq              # rocketmq持久化目录
+│  ├─conf                   
+│  └─store
+├─console               # 控制台持久化目录
 │  ├─config
 │  └─store
-└─logs                      # 日志目录
-    ├─consolelogs           # 控制台日志目录
-    └─rocketmqlogs          # rocketmq日志目录
+└─logs                  # 日志持久化目录
+    ├─consolelogs
+    └─rocketmqlogs
 ```
 
 ## 快速部署
