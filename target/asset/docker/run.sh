@@ -5,7 +5,7 @@ nohup $ROCKETMQ_HOME/bin/mqnamesrv > /dev/null 2>&1 &
 echo "启动：mqnamesrv"
 
 # start mqbroker service
-nohup $ROCKETMQ_HOME/bin/mqbroker -n localhost:9876 > /dev/null 2>&1 &
+nohup $ROCKETMQ_HOME/bin/mqbroker -n localhost:9876 -c $ROCKETMQ_HOME/conf/broker.conf > /dev/null 2>&1 &
 echo "启动：mqbroker"
 
 # start console service
